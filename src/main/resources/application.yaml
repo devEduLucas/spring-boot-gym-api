@@ -1,0 +1,9 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: Spring-Boot-Essentials
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
