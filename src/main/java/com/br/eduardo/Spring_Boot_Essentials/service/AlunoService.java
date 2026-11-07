@@ -69,13 +69,17 @@ public class AlunoService {
             throw new DataNascimentoException("É preciso ter 18 anos para se cadastrar!");
         }
 
-        if(alunoRepository.existsByEmail(alunoDto.getEmail())){
+        if(alunoRepository.existsByEmailAndIdNot(alunoDto.getEmail(), id)){
             throw new EmailExistenteException("E-mail já cadastrado!");
         }
+
+        ProfessorEntity professor = professorRepository.findById(alunoDto.getProfessorId())
+        .orElseThrow(() -> new ProfessorNaoEncontradoException("Professor não encontrado!"));
 
         alunoEntity.setNome(alunoDto.getNome());
         alunoEntity.setEmail(alunoDto.getEmail());
         alunoEntity.setDataNascimento(alunoDto.getDataNascimento());
+        alunoEntity.setProfessor(professor);
 
         alunoRepository.save(alunoEntity);
     }

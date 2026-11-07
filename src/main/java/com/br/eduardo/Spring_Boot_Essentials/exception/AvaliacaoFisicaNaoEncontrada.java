@@ -1,7 +1,7 @@
 package com.br.eduardo.Spring_Boot_Essentials.exception;
 
-public class AvaliacaoFisicaNaoEncontrada extends RuntimeException{
-    public AvaliacaoFisicaNaoEncontrada(String Mensagem){
-        super(Mensagem);
+public class AvaliacaoFisicaNaoEncontrada extends RecursoNaoEncontradoException {
+    public AvaliacaoFisicaNaoEncontrada(String mensagem){
+        super(mensagem);
     }
 }

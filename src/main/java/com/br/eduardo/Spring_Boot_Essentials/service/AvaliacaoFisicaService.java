@@ -65,12 +65,12 @@ public class AvaliacaoFisicaService {
             throw new PercentualGorduraImproprio("Percentual de gordura Inválido! Deve ser menor que 100.");
         }
 
-        if(avaliacaoFisicaRepository.existsById(avaliacaoFisicaDto.getAlunoId())){
-            throw new AlunoComAvaliacaoFisica("Este aluno já tem uma avaliação física!");
-        }
-
         AlunoEntity aluno = alunoRepository.findById(avaliacaoFisicaDto.getAlunoId())
         .orElseThrow(() -> new AlunoNaoEncontradoException("Aluno não encontrado!"));
+
+        if(avaliacaoFisicaRepository.existsByAlunoId(avaliacaoFisicaDto.getAlunoId())){
+            throw new AlunoComAvaliacaoFisica("Este aluno já tem uma avaliação física!");
+        }
 
         AvaliacaoFisicaEntity avaliacaoFisicaEntity = AvaliacaoFisicaEntity.builder()
         .peso(avaliacaoFisicaDto.getPeso())
