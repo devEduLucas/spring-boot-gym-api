@@ -13,6 +13,7 @@ import com.br.eduardo.Spring_Boot_Essentials.database.repository.ITreinoReposito
 import com.br.eduardo.Spring_Boot_Essentials.dto.TreinoExercicioDto;
 import com.br.eduardo.Spring_Boot_Essentials.exception.ExercicioNaoEncontradoException;
 import com.br.eduardo.Spring_Boot_Essentials.exception.TreinoNaoEncontradoException;
+import com.br.eduardo.Spring_Boot_Essentials.exception.TreinoExercicioNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +31,7 @@ public class TreinoExercicioService {
 
     public TreinoExercicioEntity getTreinoExercicioById(Long id) {
         return treinoExercicioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Relação não encontrada!"));
+                .orElseThrow(() -> new TreinoExercicioNaoEncontradoException("Relação não encontrada!"));
     }
 
     // POST - Cadastrar
@@ -55,7 +56,7 @@ public class TreinoExercicioService {
     public void updateTreinoExercicio(Long id, TreinoExercicioDto treinoExercicioDto) {
 
         TreinoExercicioEntity entity = treinoExercicioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Relação não encontrada!"));
+                .orElseThrow(() -> new TreinoExercicioNaoEncontradoException("Relação não encontrada!"));
 
         TreinoEntity treino = treinoRepository.findById(treinoExercicioDto.getTreinoId())
                 .orElseThrow(() -> new TreinoNaoEncontradoException("Treino não encontrado!"));
@@ -75,7 +76,7 @@ public class TreinoExercicioService {
     public void deleteTreinoExercicio(Long id) {
 
         if (!treinoExercicioRepository.existsById(id)) {
-            throw new RuntimeException("Relação não encontrada!");
+            throw new TreinoExercicioNaoEncontradoException("Relação não encontrada!");
         }
 
         treinoExercicioRepository.deleteById(id);

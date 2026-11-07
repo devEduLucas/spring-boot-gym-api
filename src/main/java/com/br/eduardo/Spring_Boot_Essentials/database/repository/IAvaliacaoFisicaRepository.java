@@ -11,6 +11,10 @@ import com.br.eduardo.Spring_Boot_Essentials.database.model.AvaliacaoFisicaEntit
 import com.br.eduardo.Spring_Boot_Essentials.dto.AvaliacaoFisicaProjection;
 
 public interface IAvaliacaoFisicaRepository extends JpaRepository<AvaliacaoFisicaEntity, Long> {
+
+    // aluno + Id => campo "id" dentro do atributo "aluno" (coluna aluno_id)
+    boolean existsByAlunoId(Long alunoId);
+
     @NativeQuery(value = """
             SELECT
             a.id AS alunoId,

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.br.eduardo.Spring_Boot_Essentials.database.model.TreinoEntity;
 import com.br.eduardo.Spring_Boot_Essentials.database.repository.ITreinoRepository;
 import com.br.eduardo.Spring_Boot_Essentials.dto.TreinoDto;
+import com.br.eduardo.Spring_Boot_Essentials.exception.TreinoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,7 @@ public class TreinoService {
 
     public TreinoEntity getTreinoById(Long id) {
         return treinoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Treino não encontrado!"));
+                .orElseThrow(() -> new TreinoNaoEncontradoException("Treino não encontrado!"));
     }
 
     public void createTreino(TreinoDto treinoDto) {
@@ -37,7 +38,7 @@ public class TreinoService {
     public void updateTreino(Long id, TreinoDto treinoDto) {
 
         TreinoEntity treinoEntity = treinoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Treino não encontrado!"));
+                .orElseThrow(() -> new TreinoNaoEncontradoException("Treino não encontrado!"));
 
         treinoEntity.setNome(treinoDto.getNome());
         treinoEntity.setDescricao(treinoDto.getDescricao());
@@ -48,7 +49,7 @@ public class TreinoService {
     public void deleteTreino(Long id) {
 
         if (!treinoRepository.existsById(id)) {
-            throw new RuntimeException("Treino não encontrado!");
+            throw new TreinoNaoEncontradoException("Treino não encontrado!");
         }
 
         treinoRepository.deleteById(id);

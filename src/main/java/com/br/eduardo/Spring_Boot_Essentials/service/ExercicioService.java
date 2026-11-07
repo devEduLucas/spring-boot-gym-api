@@ -19,7 +19,7 @@ public class ExercicioService {
 
     public ExercicioEntity getExercicioById(Long id) {
     return exercicioRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Exercício não encontrado!"));
+        .orElseThrow(() -> new ExercicioNaoEncontradoException("Exercício não encontrado!"));
     }
 
     public List<ExercicioEntity> getExercicios() {
