@@ -16,6 +16,7 @@ import com.br.eduardo.Spring_Boot_Essentials.exception.AlunoTreinoNaoEncontradoE
 import com.br.eduardo.Spring_Boot_Essentials.exception.TreinoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service 
 @RequiredArgsConstructor 
@@ -49,6 +50,7 @@ public class AlunoTreinoService {
         alunoTreinoRepository.save(alunoTreino);
     }   
 
+    @Transactional
     public void updateAlunoTreino(Long id, AlunoTreinoDto alunoTreinoDto){
         AlunoTreinoEntity alunoTreinoEntity = alunoTreinoRepository.findById(id)
         .orElseThrow(() -> new AlunoTreinoNaoEncontradoException("Aluno treino não encontrado!"));

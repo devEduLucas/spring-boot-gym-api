@@ -10,6 +10,7 @@ import com.br.eduardo.Spring_Boot_Essentials.dto.ProfessorDto;
 import com.br.eduardo.Spring_Boot_Essentials.exception.ProfessorNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service 
 @RequiredArgsConstructor 
@@ -30,7 +31,7 @@ public class ProfessorService {
 
         professorRepository.save(professorEntity);
     }
-
+    @Transactional
     public void updateProfessor(Long id, ProfessorDto professorDto){
 
         ProfessorEntity professorEntity = professorRepository.findById(id)
@@ -38,6 +39,8 @@ public class ProfessorService {
 
         professorEntity.setNome(professorDto.getNome());
         professorEntity.setEspecialidade(professorDto.getEspecialidade());
+
+        professorRepository.save(professorEntity);
     }
 
     public void deleteProfessor(Long id){
