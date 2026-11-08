@@ -1,288 +1,149 @@
-# 🏋️ Spring Boot Gym API
+Spring Boot Essentials: API de Academia
+
+API REST para gerenciar uma academia: alunos, professores, treinos, exercícios e avaliações físicas, com autenticação por JWT (Spring Security).
+
+Projeto de estudo, em evolução. Esta página documenta o que já foi feito e o que está planejado.
+
+Tecnologias
+Java (versão definida no pom.xml) e Spring Boot
+Spring Web, Spring Data JPA (Hibernate) e MySQL
+Bean Validation (jakarta.validation)
+Spring Security + JWT (biblioteca jjwt 0.12.6)
+Lombok
+JUnit 5
+Arquitetura
+
+O projeto é organizado em camadas. Uma requisição segue este caminho:
+
+Controller  →  Service  →  Repository  →  Banco (MySQL)
+ (rotas e     (regras de    (Spring Data
+  validação)   negócio)      JPA)
+src/main/java/com/br/eduardo/Spring_Boot_Essentials
+├── config/        SecurityConfig e JwtAuthenticationFilter
+├── controller/    endpoints REST
+├── database/
+│   ├── model/        entidades JPA
+│   └── repository/   repositórios Spring Data
+├── dto/           objetos de entrada e saída da API
+├── exception/     exceções de negócio, agrupadas por classe-mãe
+├── handler/       ErrorGlobal (@RestControllerAdvice)
+└── service/       regras de negócio, AuthService e JwtService
+Modelo de dados
+Entidade	Relação
+Professor	tem vários alunos
+Aluno	pertence a um professor; tem uma avaliação física
+AvaliacaoFisica	uma por aluno
+Treino e Exercicio	catálogo
+AlunoTreino	liga aluno a treino (com data de início)
+TreinoExercicio	liga treino a exercício (séries, repetições e carga)
+Usuario	credenciais de acesso (e-mail e senha em hash BCrypt)
+O que já foi feito
+CRUD e regras de negócio
+CRUD de aluno, professor, treino, exercício, avaliação física, aluno-treino e treino-exercício.
+Validações de negócio: idade mínima do aluno, e-mail único, limites de peso, altura e percentual de gordura, uma avaliação física por aluno.
+Consulta de avaliações com query nativa, projeção de interface e paginação.
+@Transactional nas atualizações que dependem de dirty checking.
+Tratamento de erros
+
+Exceções agrupadas em classes-mãe e tratadas em um único ErrorGlobal:
+
+Status	Classe-mãe	Exemplos
+400	RegraNegocioException	peso, altura ou data de nascimento inválidos
+401	CredenciaisInvalidasException	e-mail ou senha incorretos no login
+404	RecursoNaoEncontradoException	aluno, treino ou professor inexistente
+409	ConflitoException	e-mail já cadastrado, aluno que já tem avaliação
+Segurança (Spring Security + JWT)
+SecurityConfig com sessão STATELESS, CSRF desabilitado (a API usa token no header, não cookie) e todas as rotas protegidas, exceto /auth/** e /error.
+Cadastro de usuário com senha em hash BCrypt.
+POST /auth/login que devolve um token JWT assinado, com validade de 1 hora.
+JwtAuthenticationFilter: lê o header Authorization: Bearer <token>, valida o token e identifica o usuário. Sem token válido, a API responde 401.
+Testes unitários do JwtService (token válido, expirado e assinado com outro segredo).
+Como executar
+Pré-requisitos
+JDK compatível com o pom.xml
+Maven
+MySQL em execução
+Variáveis de ambiente
+Variável	Descrição
+DB_URL	URL JDBC, por exemplo jdbc:mysql://localhost:3306/<nome_do_banco>
+DB_USER	usuário do banco
+DB_PASSWORD	senha do banco
+JWT_SECRET	segredo para assinar os tokens, com no mínimo 32 caracteres
+
+Para gerar um segredo: openssl rand -base64 48. Nunca versione o valor do segredo. Se ele vazar, qualquer pessoa consegue gerar tokens válidos; a correção é trocá-lo, o que invalida todos os tokens existentes.
+
+Banco de dados
+
+O ddl-auto não está configurado, então o Hibernate não cria as tabelas. Crie-as antes de subir a aplicação. A tabela de usuários:
+
+sql
+CREATE TABLE usuario (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL
+);
+
+As demais tabelas seguem as entidades em database/model. Um script SQL completo está no roadmap.
+
+Subir a aplicação
+bash
+mvn spring-boot:run
+
+A API sobe na porta 8082.
+
+Endpoints
+Autenticação (livres)
+Método	Rota	Descrição
+POST	/auth/register	cadastra um usuário
+POST	/auth/login	devolve {"token": "..."}
+
+Exemplo:
 
-REST API para gerenciamento de uma academia, desenvolvida com **Java e Spring Boot**.
+bash
+curl -X POST http://localhost:8082/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "usuario@email.com", "senha": "minhaSenha1"}'
+Demais rotas (exigem token)
 
-O projeto tem como objetivo aplicar na prática conceitos de desenvolvimento backend, incluindo criação de APIs REST, arquitetura em camadas, persistência de dados, relacionamentos entre entidades, validações, paginação e projections.
+Envie o header Authorization: Bearer <token>.
 
----
+Recurso	Rota base	Operações
+Aluno	/v1/aluno	listar, /register, PUT /{id}, DELETE /{id}
+Professor	/v1/professor	listar, /register, PUT /{id}, DELETE /{id}
+Treino	/v1/treino	listar, buscar por id, /register, PUT /{id}, DELETE /{id}
+Exercício	/v1/exercicio	listar, /register, PUT /{id}, DELETE /{id}
+Aluno-treino	/v1/aluno-treino	listar, buscar por id, /register, PUT /{id}, DELETE /{id}
+Treino-exercício	/v1/treino-exercicio	listar, buscar por id, /register, PUT /{id}, DELETE /{id}
+Avaliação física	/v1/avaliacao-fisica	listar, buscar por id, /projection, /page/{page}/size/{size}, /register, PUT /{id}, DELETE /{id}
+Roadmap
 
-## 🚀 Tecnologias
+Itens planejados, em ordem aproximada:
 
-- Java
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Hibernate
-- MySQL
-- Maven
-- Lombok
-- Jakarta Validation
+Segurança
 
-### 🔜 Em breve
+ Papéis (aluno e professor) e autorização por perfil.
+ Decidir como vincular o usuário autenticado às entidades Aluno e Professor.
 
-- Spring Security
-- BCrypt
-- Autenticação com JWT
-- Autorização por perfis
-- Proteção dos endpoints
+Qualidade
 
----
+ Testes unitários dos services com JUnit e Mockito.
+ Testes de integração dos endpoints, incluindo os cenários de segurança (401 e 200).
+ Revisar o tratamento de exclusão de registros com dados relacionados (hoje gera erro de chave estrangeira).
 
-## 📁 Estrutura do projeto
+API
 
-```text
-src/main/java
-└── com.br.eduardo.Spring_Boot_Essentials
-    ├── config
-    ├── controller
-    ├── service
-    ├── dto
-    ├── database
-    │   ├── model
-    │   └── repository
-    └── handler
-    └── exception
+ DTOs de resposta, em vez de devolver entidades diretamente.
+ Paginação nas demais listagens.
+ Validações de faixa (peso, altura, gordura) com Bean Validation nos DTOs.
 
-Controller
-Responsável por receber as requisições HTTP e retornar as respostas da API.
+Infraestrutura
 
-Service
-Responsável pelas regras de negócio e validações da aplicação.
+ Script SQL completo ou migrations (Flyway) no lugar da criação manual das tabelas.
+ Profiles de configuração (dev e produção).
+ Docker e docker-compose com MySQL.
+ Documentação da API com OpenAPI.
 
-Repository
-Responsável pela comunicação com o banco de dados utilizando Spring Data JPA.
+Organização
 
-Entity
-Representa as entidades persistidas no banco de dados.
-
-DTO
-Objetos utilizados para transportar os dados recebidos pela API.
-
-Handler
-Responsável pelo tratamento centralizado das exceções personalizadas da aplicação.
-
-Exception
-As exceções são tratadas e convertidas em respostas HTTP apropriadas para o cliente da API.
-
-## 🗄️ Banco de dados
-
-O projeto utiliza **MySQL**.
-
-Banco utilizado:
-
-gym_system
-
-### Principais entidades
-
-- Professor
-- Aluno
-- Avaliação Física
-- Treino
-- Exercício
-- AlunoTreino
-- TreinoExercicio
-
-### Relacionamentos
-
-Professor 1:N Aluno
-
-Aluno 1:1 AvaliacaoFisica
-
-Aluno N:N Treino
-       │
-       └── AlunoTreino
-
-Treino N:N Exercicio
-       │
-       └── TreinoExercicio
-
-As entidades `AlunoTreino` e `TreinoExercicio` representam os relacionamentos muitos-para-muitos entre alunos e treinos, e entre treinos e exercícios.
-
----
-
-## 🔗 Endpoints
-
-### 👤 Alunos
-
-GET    /v1/alunos
-POST   /v1/alunos/register
-PUT    /v1/alunos/{id}
-DELETE /v1/alunos/{id}
-
-### 👨‍🏫 Professores
-
-GET    /v1/professores
-POST   /v1/professores
-PUT    /v1/professores/{id}
-DELETE /v1/professores/{id}
-
-### 📊 Avaliações físicas
-
-GET    /v1/avaliacoes-fisicas
-POST   /v1/avaliacoes-fisicas
-PUT    /v1/avaliacoes-fisicas/{id}
-DELETE /v1/avaliacoes-fisicas/{id}
-
-A consulta de avaliações físicas utiliza Projection e paginação.
-
-### 🏋️ Treinos
-
-GET    /v1/treinos
-GET    /v1/treinos/{id}
-POST   /v1/treinos
-PUT    /v1/treinos/{id}
-DELETE /v1/treinos/{id}
-
-### 💪 Exercícios
-
-GET    /v1/exercicios
-GET    /v1/exercicios/{id}
-POST   /v1/exercicios
-PUT    /v1/exercicios/{id}
-DELETE /v1/exercicios/{id}
-
-### 🔗 Aluno x Treino
-
-GET    /v1/aluno-treino
-GET    /v1/aluno-treino/{id}
-POST   /v1/aluno-treino
-PUT    /v1/aluno-treino/{id}
-DELETE /v1/aluno-treino/{id}
-
-### 🔗 Treino x Exercício
-
-GET    /v1/treino-exercicios
-GET    /v1/treino-exercicios/{id}
-POST   /v1/treino-exercicios
-PUT    /v1/treino-exercicios/{id}
-DELETE /v1/treino-exercicios/{id}
-
----
-
-## 📑 Paginação
-
-A API utiliza os recursos de paginação do Spring Data para controlar a quantidade de registros retornados nas consultas.
-
-A implementação utiliza `Page` e `Pageable`, permitindo controlar a página atual e a quantidade de registros por página.
-
----
-
-## 🔎 Projection
-
-O projeto utiliza **Spring Data Projection** para retornar somente os dados necessários em determinadas consultas, evitando o retorno de informações desnecessárias.
-
-As projections são utilizadas principalmente na consulta de avaliações físicas, reunindo informações do aluno e de sua avaliação física.
-
-Exemplo de retorno:
-
-```json
-{
-    "alunoId": 2,
-    "nome": "Eduardo",
-    "dataNascimento": "2008-06-26",
-    "peso": 84.00,
-    "altura": 1.85,
-    "percentualGordura": 15.50,
-    "dataAvaliacao": "2026-09-13"
-}
-
-## ✅ Validações
-
-A aplicação possui validações de regras de negócio para garantir a integridade dos dados.
-
-Entre as validações implementadas estão:
-
-- E-mail não pode ser duplicado
-- Aluno deve possuir idade mínima para cadastro
-- Peso deve possuir um valor válido
-- Altura deve possuir um valor válido
-- Percentual de gordura deve estar dentro do intervalo permitido
-- Um aluno não pode possuir mais de uma avaliação física
-- O aluno precisa existir para receber uma avaliação física
-- O treino precisa existir antes de receber um exercício
-- O exercício precisa existir antes de ser associado a um treino
-
----
-
-## ⚠️ Exception Handler
-
-O projeto utiliza um `GlobalExceptionHandler` para centralizar o tratamento das exceções da aplicação.
-
-Foram criadas exceções personalizadas para representar diferentes erros de negócio, como:
-
-- Aluno não encontrado
-- E-mail já cadastrado
-- Data de nascimento inválida
-- Peso inválido
-- Altura inválida
-- Percentual de gordura inválido
-- Avaliação física já existente
-- Treino não encontrado
-- Exercício não encontrado
-
-As exceções são interceptadas pelo `GlobalExceptionHandler` e transformadas em respostas HTTP apropriadas para o cliente da API.
-
----
-
-## ⚙️ Configuração
-
-### Pré-requisitos
-
-Antes de executar o projeto, é necessário ter instalado:
-
-- Java
-- Maven
-- MySQL
-
-### Banco de dados
-
-Crie o banco de dados MySQL:
-
-```sql
-CREATE DATABASE gym_system;
-
-## 🔐 Segurança
-
-A implementação de autenticação e autorização será adicionada futuramente ao projeto.
-
-### Planejado
-
-- Spring Security
-- BCrypt para hash de senhas
-- Autenticação utilizando JWT
-- Autorização por perfis de usuário
-- Proteção dos endpoints
-
----
-
-## 🛣️ Roadmap
-
-- [x] CRUD de alunos
-- [x] CRUD de professores
-- [x] CRUD de avaliações físicas
-- [x] CRUD de treinos
-- [x] CRUD de exercícios
-- [x] Relacionamento entre alunos e treinos
-- [x] Relacionamento entre treinos e exercícios
-- [x] Validações de regras de negócio
-- [x] Exception Handler
-- [x] Paginação
-- [x] Projection
-- [ ] Spring Security
-- [ ] Autenticação com JWT
-- [ ] Autorização por perfis
-- [ ] Proteção dos endpoints
-
----
-
-## 👨‍💻 Autor
-
-**Eduardo Lucas de Oliveira**
-
-Estudante de Desenvolvimento de Sistemas e desenvolvedor backend em formação.
-
-### Tecnologias de interesse
-
-Java • Spring Boot • REST APIs • JPA • MySQL • Backend
-
----
+ Renomear o pacote Spring_Boot_Essentials para o padrão Java (minúsculas, sem underscore) e os repositórios com prefixo I.
