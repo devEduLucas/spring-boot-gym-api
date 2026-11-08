@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.br.eduardo.Spring_Boot_Essentials.exception.ConflitoException;
+import com.br.eduardo.Spring_Boot_Essentials.exception.CredenciaisInvalidasException;
 import com.br.eduardo.Spring_Boot_Essentials.exception.RecursoNaoEncontradoException;
 import com.br.eduardo.Spring_Boot_Essentials.exception.RegraNegocioException;
 
 @RestControllerAdvice
 public class ErrorGlobal {
 
+    // Pega TODAS as filhas: AlunoNaoEncontradoException, TreinoNaoEncontradoException, etc.
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ResponseEntity<String> recursoNaoEncontrado(RecursoNaoEncontradoException exception){
         return ResponseEntity
@@ -32,6 +34,14 @@ public class ErrorGlobal {
     public ResponseEntity<String> regraNegocio(RegraNegocioException exception){
         return ResponseEntity
                 .badRequest()
+                .body(exception.getMessage());
+    }
+
+    // Login com e-mail ou senha errados
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<String> credenciaisInvalidas(CredenciaisInvalidasException exception){
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(exception.getMessage());
     }
 }

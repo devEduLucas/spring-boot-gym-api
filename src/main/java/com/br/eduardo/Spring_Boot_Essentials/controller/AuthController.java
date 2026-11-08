@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.br.eduardo.Spring_Boot_Essentials.dto.CadastroDto;
+import com.br.eduardo.Spring_Boot_Essentials.dto.LoginDto;
+import com.br.eduardo.Spring_Boot_Essentials.dto.TokenDto;
 import com.br.eduardo.Spring_Boot_Essentials.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -15,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
@@ -26,5 +27,10 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Usuário cadastrado com sucesso!");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<TokenDto> login(@Valid @RequestBody LoginDto loginDto){
+        return ResponseEntity.ok(authService.login(loginDto));
     }
 }
